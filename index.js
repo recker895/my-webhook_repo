@@ -1,35 +1,43 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json()); // parse JSON body
 
-// Root route
-app.get("/", (req, res) => {
-  res.send("Dialogflow webhook is alive ✅");
-});
+// Health check
+app.get("/", (_req, res) => res.send("Dialogflow webhook is alive ✅"));
 
-// Webhook endpoint
-app.post("/webhook", (req, res) => {
-  const intent = req.body.queryResult.intent.displayName;
+// Main webhook endpoint (Dialogflow ES)
+app.post("/webhook", async (req, res) => {
+  try {
+    const intentName = req.body?.queryResult?.intent?.displayName || "Unknown";
+    const params = req.body?.queryResult?.parameters || {};
 
-  let responseText = "Default response";
+    let responseText = "I didn’t understand that.";
 
-  if (intent === "GetTime") {
-    const now = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-    responseText = `The current time in India is ${now}`;
-  } else if (intent === "GreetUser") {
-    const name = req.body.queryResult.parameters["person"]
-      ? req.body.queryResult.parameters["person"].name
-      : "there";
-    responseText = `Hello ${name}, nice to meet you!`;
+    // === Intent handlers ===
+    if (intentName === "AskName") {
+      // Your requested fixed answer
+      responseText = "Your name is Shreya.";
+    }
+    else if (intentName === "GetTime") {
+      const now = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      responseText = `The current time is ${now}.`;
+    }
+    else if (intentName === "GreetUser") {
+      const name =
+        params?.person?.name || params?.name || params?.given_name || "there";
+      responseText = `Hello, ${name}! How can I help you today?`;
+    }
+
+    // === Minimal Dialogflow ES response ===
+    return res.json({ fulfillmentText: responseText });
+
+  } catch (err) {
+    console.error("Webhook error:", err);
+    return res.json({ fulfillmentText: "Sorry, something went wrong on the server." });
   }
-
-  res.json({ fulfillmentText: responseText });
 });
 
-// ✅ Important: use Render's PORT environment variable
+// Important for Render/other hosts
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Webhook server is running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Webhook server is running on port ${PORT}`));
