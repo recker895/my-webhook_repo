@@ -1,72 +1,66 @@
 const express = require("express");
-const bodyParser = require("body-parser");
+const path = require("path");
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(express.json());
 
-// Serve static files (so /unnamed.png works)
+// ✅ Serve files from the project root (so /unnamed.png works)
 app.use(express.static(__dirname));
-app.use(bodyParser.json());
 
-// Root route → show page with background + Dialogflow Messenger
+// ✅ Root page with your image as background
 app.get("/", (_req, res) => {
   res.type("html").send(`
 <!doctype html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <title>SDG Chatbot</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
-  <style>
-    html, body { height: 100%; margin: 0; }
-    body {
-      background: url('/unnamed.png') no-repeat center center fixed;
-      background-size: cover;
-      font-family: system-ui, -apple-system, Arial, sans-serif;
-    }
-    df-messenger {
-      --df-messenger-bot-message: #e8f0fe;
-      --df-messenger-user-message: #fff;
-      --df-messenger-font-color: #0b1021;
-      --df-messenger-chat-background: rgba(12,18,34,0.55);
-      --df-messenger-send-icon: #0b57d0;
-      --df-messenger-button-titlebar-color: #0b57d0;
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 9999;
-    }
-  </style>
-</head>
-<body>
-  <df-messenger
-      intent="WELCOME"
-      chat-title="SDG Chatbot"
-      agent-id="YOUR-AGENT-ID"
-      language-code="en">
-  </df-messenger>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Dialogflow Webhook</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body {
+        background: url('/unnamed.png') no-repeat center center fixed;
+        background-size: cover;
+        display: flex; align-items: center; justify-content: center;
+        font-family: system-ui, Arial, sans-serif; color: #fff;
+        text-shadow: 0 0 12px rgba(0,0,0,.6);
+      }
+      h1 { font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <h1>Dialogflow webhook is alive ✅</h1>
+  </body>
 </html>
   `);
 });
 
-// Dialogflow Webhook endpoint
-app.post("/webhook", (req, res) => {
-  const tag = req.body.fulfillmentInfo?.tag || "";
-  let responseText = "I didn’t understand that.";
+// === Dialogflow ES webhook endpoint (unchanged) ===
+app.post("/webhook", async (req, res) => {
+  try {
+    const intentName = req.body?.queryResult?.intent?.displayName || "Unknown";
+    const params = req.body?.queryResult?.parameters || {};
 
-  if (tag === "get_name") {
-    responseText = "My name is Shreya!";
+    let responseText = "I didn’t understand that.";
+
+    if (intentName === "AskName") {
+      responseText = "Your name is Sahil.";
+    } else if (intentName === "GetTime") {
+      const now = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      responseText = `The current time is ${now}.`;
+    } else if (intentName === "GreetUser") {
+      const name = params?.person?.name || params?.name || params?.given_name || "there";
+      responseText = `Hello, ${name}! How can I help you today?`;
+    }
+
+    return res.json({ fulfillmentText: responseText });
+  } catch (err) {
+    console.error("Webhook error:", err);
+    return res.json({ fulfillmentText: "Sorry, something went wrong on the server." });
   }
-
-  res.json({
-    fulfillment_response: {
-      messages: [{ text: { text: [responseText] } }],
-    },
-  });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Important for Render/other hosts
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Webhook server is running on port ${PORT}`));
 
