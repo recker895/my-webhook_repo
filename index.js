@@ -1,4 +1,5 @@
 const express = require("express");
+const fs = require("fs");
 const path = require("path");
 
 const app = express();
@@ -6,30 +7,48 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// ---- DEBUG REQUEST LOGGING ----
-app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
+// ---- Helper: load image and cache as base64 data URL ----
+let dataUrl = null;
+let imageError = null;
+
+(function loadBackground() {
+  try {
+    // EXACT filename expected in your repo root
+    const imgPath = path.join(__dirname, "unnamed.png");
+    const buf = fs.readFileSync(imgPath);          // throws if not found
+    const b64 = buf.toString("base64");
+    dataUrl = `data:image/png;base64,${b64}`;
+    console.log("✅ Background image loaded and inlined.");
+  } catch (err) {
+    imageError = err;
+    console.error("❌ Could not load unnamed.png:", err.message);
+  }
+})();
+
+// ---- Minimal debug routes (to help if it still fails) ----
+app.get("/debug/files", (_req, res) => {
+  try {
+    const files = fs.readdirSync(__dirname);
+    res.json({ cwd: __dirname, files });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
-
-// ---- STATIC SERVE FROM REPO ROOT (so /unnamed.png works) ----
-app.use(express.static(__dirname, {
-  fallthrough: true,
-}));
-
-// ---- EXTRA: explicit route for the same image (/bg.png) ----
-app.get("/bg.png", (_req, res) => {
-  const filePath = path.join(__dirname, "unnamed.png");
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.error("sendFile error for /bg.png:", err);
-      res.status(err.statusCode || 500).end();
-    }
+app.get("/debug/status", (_req, res) => {
+  res.json({
+    hasDataUrl: Boolean(dataUrl),
+    imageError: imageError ? imageError.message : null,
+    cwd: __dirname,
   });
 });
 
-// ---- STATUS PAGE WITH BACKGROUND ----
+// ---- Root page with inline background (no static paths!) ----
 app.get("/", (_req, res) => {
+  const bg = dataUrl
+    ? `url('${dataUrl}')`
+    : // fallback gradient if image failed to load
+      "linear-gradient(135deg, #0b1021 0%, #1b6d7b 100%)";
+
   res.type("html").send(`
 <!doctype html>
 <html>
@@ -40,30 +59,38 @@ app.get("/", (_req, res) => {
     <style>
       html, body { height: 100%; margin: 0; }
       body {
-        /* Try both paths; first is the explicit route, second is direct file */
-        background:
-          url('/bg.png') no-repeat center center fixed,
-          url('/unnamed.png') no-repeat center center fixed;
+        background: ${bg} no-repeat center center fixed;
         background-size: cover;
         display: flex; align-items: center; justify-content: center;
         font-family: system-ui, Arial, sans-serif; color: #fff;
         text-shadow: 0 0 12px rgba(0,0,0,.7);
       }
-      h1 { font-weight: 700; }
-      .hint {
-        position: fixed; left: 12px; bottom: 12px; font-size: 12px; opacity: .8;
+      .card {
+        background: rgba(0,0,0,.45);
+        padding: 18px 22px; border-radius: 12px;
+        backdrop-filter: blur(2px);
       }
+      .hint { font-size: 12px; opacity: .85; margin-top: 6px; }
+      code { background: rgba(255,255,255,.15); padding: 2px 6px; border-radius: 6px; }
     </style>
   </head>
   <body>
-    <h1>Dialogflow webhook is alive ✅</h1>
-    <div class="hint">If you don't see the image, open /bg.png or /unnamed.png directly.</div>
+    <div class="card">
+      <h1>Dialogflow webhook is alive ✅</h1>
+      <div class="hint">
+        ${
+          dataUrl
+            ? "Background loaded from <code>unnamed.png</code>."
+            : "Using fallback gradient (image not found). Check <code>/debug/status</code>."
+        }
+      </div>
+    </div>
   </body>
 </html>
   `);
 });
 
-// ---- DIALOGFLOW ES WEBHOOK (your original logic) ----
+// ---- Dialogflow ES webhook (your original handlers) ----
 app.post("/webhook", async (req, res) => {
   try {
     const intentName = req.body?.queryResult?.intent?.displayName || "Unknown";
@@ -89,5 +116,5 @@ app.post("/webhook", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Webhook server is running on port ${PORT}`);
+  console.log(`🚀 Webhook server running on port ${PORT}`);
 });
