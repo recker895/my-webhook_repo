@@ -2,12 +2,33 @@ const express = require("express");
 const path = require("path");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
 
-// ✅ Serve files from the project root (so /unnamed.png works)
-app.use(express.static(__dirname));
+// ---- DEBUG REQUEST LOGGING ----
+app.use((req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
-// ✅ Root page with your image as background
+// ---- STATIC SERVE FROM REPO ROOT (so /unnamed.png works) ----
+app.use(express.static(__dirname, {
+  fallthrough: true,
+}));
+
+// ---- EXTRA: explicit route for the same image (/bg.png) ----
+app.get("/bg.png", (_req, res) => {
+  const filePath = path.join(__dirname, "unnamed.png");
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error("sendFile error for /bg.png:", err);
+      res.status(err.statusCode || 500).end();
+    }
+  });
+});
+
+// ---- STATUS PAGE WITH BACKGROUND ----
 app.get("/", (_req, res) => {
   res.type("html").send(`
 <!doctype html>
@@ -19,23 +40,30 @@ app.get("/", (_req, res) => {
     <style>
       html, body { height: 100%; margin: 0; }
       body {
-        background: url('/unnamed.png') no-repeat center center fixed;
+        /* Try both paths; first is the explicit route, second is direct file */
+        background:
+          url('/bg.png') no-repeat center center fixed,
+          url('/unnamed.png') no-repeat center center fixed;
         background-size: cover;
         display: flex; align-items: center; justify-content: center;
         font-family: system-ui, Arial, sans-serif; color: #fff;
-        text-shadow: 0 0 12px rgba(0,0,0,.6);
+        text-shadow: 0 0 12px rgba(0,0,0,.7);
       }
       h1 { font-weight: 700; }
+      .hint {
+        position: fixed; left: 12px; bottom: 12px; font-size: 12px; opacity: .8;
+      }
     </style>
   </head>
   <body>
     <h1>Dialogflow webhook is alive ✅</h1>
+    <div class="hint">If you don't see the image, open /bg.png or /unnamed.png directly.</div>
   </body>
 </html>
   `);
 });
 
-// === Dialogflow ES webhook endpoint (unchanged) ===
+// ---- DIALOGFLOW ES WEBHOOK (your original logic) ----
 app.post("/webhook", async (req, res) => {
   try {
     const intentName = req.body?.queryResult?.intent?.displayName || "Unknown";
@@ -60,7 +88,6 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// Important for Render/other hosts
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Webhook server is running on port ${PORT}`));
-
+app.listen(PORT, () => {
+  console.log(`🚀 Webhook server is running on port ${PORT}`);
+});
