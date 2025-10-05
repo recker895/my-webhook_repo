@@ -4,37 +4,37 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
-// Serve static files (image, css, etc.)
-app.use(express.static(path.join(__dirname, "public")));
+// Serve static files from the root directory (so unnamed.png can be accessed)
+app.use(express.static(__dirname));
 
-// Health check with background
+// Root page with background
 app.get("/", (_req, res) => {
-  res.send(`
-    <html>
-      <head>
-        <style>
-          body {
-            margin: 0;
-            height: 100vh;
-            background: url('/background.png') no-repeat center center fixed;
-            background-size: cover;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            color: white;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-          }
-        </style>
-      </head>
-      <body>
-        <h1>Dialogflow webhook is alive ✅</h1>
-      </body>
-    </html>
+  res.type("html").send(`
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Dialogflow Webhook</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body {
+        background: url('/unnamed.png') no-repeat center center fixed;
+        background-size: cover;
+        display: flex; align-items: center; justify-content: center;
+        font-family: system-ui, Arial, sans-serif; color: #fff;
+        text-shadow: 0 0 12px rgba(0,0,0,.6);
+      }
+      h1 { font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <h1>Dialogflow webhook is alive ✅</h1>
+  </body>
+</html>
   `);
 });
 
-// Main webhook endpoint (Dialogflow ES)
+// Dialogflow webhook endpoint
 app.post("/webhook", async (req, res) => {
   try {
     const intentName = req.body?.queryResult?.intent?.displayName || "Unknown";
@@ -60,4 +60,4 @@ app.post("/webhook", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Webhook server is running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Webhook server running on ${PORT}`));
