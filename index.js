@@ -25,9 +25,11 @@ app.post("/webhook", async (req, res) => {
         params?.person?.name || params?.name || params?.given_name || "there";
       responseText = `Hello, ${name}! How can I help you today?`;
     } else if (intentName === "AskTeammateName") {
+      // User asks: "What is my teammate name?"
       responseText = "Your teammate name is Unnati.";
-    } else if (intentName === "AskRemainingTeammates") {
-      responseText = "Your remaining teammates are Abinav, Sejal and Arpan.";
+    } else if (intentName === "AskOtherTeammates") {
+      // User asks: "What will be my other teammate names?"
+      responseText = "Your other teammates are Abinav, Sejal and Arpan.";
     }
 
     // === Minimal Dialogflow ES response ===
