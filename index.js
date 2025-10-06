@@ -16,7 +16,6 @@ app.post("/webhook", async (req, res) => {
 
     // === Intent handlers ===
     if (intentName === "AskName") {
-      // Your requested fixed answer
       responseText = "Your name is Sahil.";
     } else if (intentName === "GetTime") {
       const now = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
@@ -25,6 +24,10 @@ app.post("/webhook", async (req, res) => {
       const name =
         params?.person?.name || params?.name || params?.given_name || "there";
       responseText = `Hello, ${name}! How can I help you today?`;
+    } else if (intentName === "AskTeammateName") {
+      responseText = "Your teammate name is Unnati.";
+    } else if (intentName === "AskRemainingTeammates") {
+      responseText = "Your remaining teammates are Abinav, Sejal and Arpan.";
     }
 
     // === Minimal Dialogflow ES response ===
@@ -42,3 +45,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
   console.log(`🚀 Webhook server is running on port ${PORT}`)
 );
+
+
