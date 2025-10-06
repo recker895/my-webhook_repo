@@ -1,0 +1,52 @@
+[
+  {
+    "question": "What is the UK–China CCS project?",
+    "answer": "The UK supported a 'Near-Zero Emissions Coal' project with Carbon Capture and Storage in China to cut emissions per unit power by up to 90%, potentially halving emissions by 2030.",
+    "enabled": true
+  },
+  {
+    "question": "How many homes were powered in Graham Creek?",
+    "answer": "In Graham Creek village, 25 homes and a primary school with 30 children were powered by solar.",
+    "enabled": true
+  },
+  {
+    "question": "What happened to the EU economy between 2016 and 2021?",
+    "answer": "The EU economy grew 6.3% while domestic material use grew 4.5%. Resource productivity rose 1.4% and energy productivity 9.1%, while energy use dropped 2.6%.",
+    "enabled": true
+  },
+  {
+    "question": "What is the Barbados Sea Turtle Project?",
+    "answer": "Based at the University of the West Indies, it conserves endangered Hawksbill turtles, using tracking tags and promoting eco-tourism for local communities.",
+    "enabled": true
+  },
+  {
+    "question": "What is the Urban Agriculture Program in Rosario?",
+    "answer": "In Rosario, Argentina, the Urban Agriculture Program supported hundreds of farmers to grow organic food in vacant lots, rooftops, and public spaces with training, technical help, and marketing support.",
+    "enabled": true
+  },
+  {
+    "question": "How many renewable energy jobs are in Asia-Pacific?",
+    "answer": "More than 5.8 million of the 9.8 million renewable energy workers are in Asia-Pacific, with 40% in China and about 9% in India. By 2030, 14.2 million jobs could be created.",
+    "enabled": true
+  },
+  {
+    "question": "What is the Slum Networking Project in India?",
+    "answer": "The Slum Networking Project in India provided water, sanitation, drainage, waste management, street lighting, and roads to over 100,000 slum dwellers, while promoting biogas, solar panels, and rooftop gardens.",
+    "enabled": true
+  },
+  {
+    "question": "What is London’s Ultra Low Emission Zone?",
+    "answer": "Launched in 2019, it required strict vehicle emission standards or a fee. In 10 months, roadside NO2 fell 44% and 44,000 fewer polluting cars entered daily. Revenues were reinvested in public transport.",
+    "enabled": true
+  },
+  {
+    "question": "What happened in Southern Belize?",
+    "answer": "In rural Southern Belize, three Mayan women trained by Barefoot College India installed solar systems in four indigenous communities, benefiting 1,000+ residents and avoiding 6.5 tons of carbon emissions.",
+    "enabled": true
+  },
+  {
+    "question": "What is TransMilenio in Bogotá?",
+    "answer": "The TransMilenio Bus Rapid Transit system reduced travel times, costs, accidents, and emissions by running high-capacity buses on dedicated lanes with cycling and pedestrian infrastructure.",
+    "enabled": true
+  }
+]
